@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Draw Region on Canvas</title>
+<style>
+    canvas {
+        border: 1px solid black;
+    }
+</style>
+</head>
+<body>
+<video id="video" width="640" height="480" autoplay></video>
+<canvas id="canvas" width="640" height="480"></canvas>
+
+<script>
+window.onload = function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let isDrawing = false;
+    let points = [];
+
+    // Get video stream
+    navigator.mediaDevices.getUserMedia({ video: true })
+    .then(stream => {
+        video.srcObject = stream;
+    })
+    .catch(error => {
+        console.error('Error accessing webcam:', error);
+    });
+
+    // Draw function
+    function draw() {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = 'red';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < points.length; i++) {
+            const point = points[i];
+            if (i === 0) {
+                ctx.moveTo(point.x, point.y);
+            } else {
+                ctx.lineTo(point.x, point.y);
+            }
+        }
+        if (isDrawing && points.length > 0) {
+            ctx.lineTo(points[points.length - 1].x, points[points.length - 1].y);
+        }
+        ctx.stroke();
+    }
+
+    // Mouse event listeners
+    canvas.addEventListener('mousedown', function(event) {
+        isDrawing = true;
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        points.push({ x, y });
+        draw();
+    });
+
+    canvas.addEventListener('mousemove', function(event) {
+        if (isDrawing) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            points.push({ x, y });
+            draw();
+        }
+    });
+
+    canvas.addEventListener('mouseup', function() {
+        isDrawing = false;
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+        isDrawing = false;
+    });
+};
+</script>
+</body>
+</html>
